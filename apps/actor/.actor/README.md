@@ -125,6 +125,12 @@ You are not charged a successful-result event for duplicate, rejected or invalid
 - Missing facts stay missing.
 - Always confirm terms on the original `sourceUrl`.
 
+## Explore Scouvela
+
+Learn how Scouvela discovers and structures African SME grants, funding, training, accelerator, and contract opportunities.
+
+[Visit the Scouvela website →](https://scouvela-web.vercel.app/)
+
 ## About Scouvela
 
 Scouvela is opportunity-intelligence infrastructure for African enterprise. It works as a Store Actor, a scheduled monitor, an automation step, and a data source for AI agents.
