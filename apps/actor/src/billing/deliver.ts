@@ -1,6 +1,5 @@
 import type { SmeOpportunity } from '@scouvela/shared';
 import {
-  applyConfirmedCharges,
   isPayPerEventRun,
   PPE_DEFAULT_DATASET_ITEM,
   pushOpportunityResult,
@@ -10,8 +9,16 @@ import type { RunStats } from '../utils/stats.js';
 
 /**
  * Persist validated opportunities to the default Dataset.
- * Each saved item maps to one automatic `apify-default-dataset-item` charge under PPE.
- * Stops when the run charge limit no longer allows further default-dataset charges.
+ *
+ * Under PPE, Apify automatically charges `apify-default-dataset-item` for each default-Dataset
+ * write. The JS SDK documents `Actor.pushData(item)` (no event name) as returning void, so we:
+ * - never cast that return into ChargeResult
+ * - never manually charge the synthetic event
+ * - never block delivery on an undefined synthetic ChargeResult
+ * - stop only when ChargingManager reports no remaining budget for the synthetic event
+ *
+ * `ppeEventsCharged` stays reserved for confirmed custom `Actor.charge` results (AI events).
+ * Dataset delivery is counted separately as `ppeDatasetItemsDelivered`.
  */
 export async function deliverOpportunities(
   records: SmeOpportunity[],
@@ -25,19 +32,11 @@ export async function deliverOpportunities(
       break;
     }
 
-    const chargeResult = await pushOpportunityResult(item);
-    applyConfirmedCharges(stats, chargeResult);
-
-    if (ppe && chargeResult.chargedCount === 0) {
-      break;
-    }
+    await pushOpportunityResult(item);
 
     saved.push(item);
     stats.recordsSaved += 1;
-
-    if (chargeResult.eventChargeLimitReached) {
-      break;
-    }
+    stats.ppeDatasetItemsDelivered += 1;
   }
 
   return saved;

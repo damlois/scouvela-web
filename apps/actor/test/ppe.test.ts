@@ -125,7 +125,8 @@ describe('PPE deliverOpportunities', () => {
   });
 
   it('pushes without an explicit event name so apify-default-dataset-item stays automatic', async () => {
-    pushDataMock.mockResolvedValue(charged(1));
+    // Official JS contract: pushData(item) with no event name resolves like void / undefined.
+    pushDataMock.mockResolvedValue(undefined);
     const stats = createRunStats();
     const items = [
       sampleOpportunity({ id: 'a', title: 'Grant A' }),
@@ -136,15 +137,29 @@ describe('PPE deliverOpportunities', () => {
 
     expect(saved).toHaveLength(2);
     expect(stats.recordsSaved).toBe(2);
-    expect(stats.ppeEventsCharged).toBe(2);
+    expect(stats.ppeDatasetItemsDelivered).toBe(2);
+    // Synthetic Dataset charges are not confirmed via ChargeResult in the public JS API.
+    expect(stats.ppeEventsCharged).toBe(0);
     expect(pushDataMock).toHaveBeenCalledTimes(2);
     expect(pushDataMock.mock.calls[0]).toEqual([items[0]]);
     expect(pushDataMock.mock.calls[1]).toEqual([items[1]]);
   });
 
-  it('does not count PPE when the run is not pay-per-event but still saves results', async () => {
+  it('delivers results when pushData returns void and does not invent ChargeResult counts', async () => {
+    pushDataMock.mockResolvedValue(undefined);
+    const stats = createRunStats();
+
+    const saved = await deliverOpportunities([sampleOpportunity()], stats);
+
+    expect(saved).toHaveLength(1);
+    expect(stats.ppeDatasetItemsDelivered).toBe(1);
+    expect(stats.ppeEventsCharged).toBe(0);
+    expect(pushDataMock).toHaveBeenCalledWith(expect.objectContaining({ id: 'opp-1' }));
+  });
+
+  it('still saves results when the run is not pay-per-event', async () => {
     getPricingInfoMock.mockReturnValue({ isPayPerEvent: false });
-    pushDataMock.mockResolvedValue(charged(0));
+    pushDataMock.mockResolvedValue(undefined);
     const stats = createRunStats();
     const items = [sampleOpportunity(), sampleOpportunity({ id: '2', sourceUrl: 'https://example.org/2' })];
 
@@ -152,16 +167,22 @@ describe('PPE deliverOpportunities', () => {
 
     expect(saved).toHaveLength(2);
     expect(stats.recordsSaved).toBe(2);
+    expect(stats.ppeDatasetItemsDelivered).toBe(2);
     expect(stats.ppeEventsCharged).toBe(0);
   });
 
-  it('stops delivering when the dataset charge limit is reached', async () => {
-    calculateMaxEventChargeCountWithinLimitMock.mockImplementation((eventName: string) =>
-      eventName === PPE_DEFAULT_DATASET_ITEM ? 1 : Number.POSITIVE_INFINITY,
-    );
-    pushDataMock
-      .mockResolvedValueOnce(charged(1, true))
-      .mockResolvedValueOnce(charged(0, true));
+  it('stops before pushing when ChargingManager reports no remaining dataset budget', async () => {
+    let remaining = 1;
+    calculateMaxEventChargeCountWithinLimitMock.mockImplementation((eventName: string) => {
+      if (eventName === PPE_DEFAULT_DATASET_ITEM) {
+        return remaining;
+      }
+      return Number.POSITIVE_INFINITY;
+    });
+    pushDataMock.mockImplementation(async () => {
+      remaining = 0;
+      return undefined;
+    });
 
     const stats = createRunStats();
     const items = [
@@ -174,22 +195,23 @@ describe('PPE deliverOpportunities', () => {
 
     expect(saved).toHaveLength(1);
     expect(stats.recordsSaved).toBe(1);
-    expect(stats.ppeEventsCharged).toBe(1);
+    expect(stats.ppeDatasetItemsDelivered).toBe(1);
+    expect(stats.ppeEventsCharged).toBe(0);
     expect(pushDataMock).toHaveBeenCalledTimes(1);
   });
 
-  it('stops when a PPE push confirms zero chargedCount', async () => {
-    pushDataMock.mockResolvedValue(charged(0, true));
+  it('does not skip a delivered item when pushData returns void under PPE', async () => {
+    pushDataMock.mockResolvedValue(undefined);
     const stats = createRunStats();
     const saved = await deliverOpportunities(
       [sampleOpportunity(), sampleOpportunity({ id: '2', sourceUrl: 'https://example.org/2' })],
       stats,
     );
 
-    expect(saved).toHaveLength(0);
-    expect(stats.recordsSaved).toBe(0);
+    expect(saved).toHaveLength(2);
+    expect(stats.recordsSaved).toBe(2);
+    expect(stats.ppeDatasetItemsDelivered).toBe(2);
     expect(stats.ppeEventsCharged).toBe(0);
-    expect(pushDataMock).toHaveBeenCalledTimes(1);
   });
 });
 

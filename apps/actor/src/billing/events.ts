@@ -61,7 +61,10 @@ export async function chargeEvent(eventName: string, count = 1): Promise<ChargeR
   }
 }
 
-/** Increment `ppeEventsCharged` only from confirmed ChargeResult values. */
+/**
+ * Increment `ppeEventsCharged` only from confirmed `Actor.charge` ChargeResult values.
+ * Do not use this for synthetic `apify-default-dataset-item` — JS `pushData(item)` is typed void.
+ */
 export function applyConfirmedCharges(stats: RunStats, result: ChargeResult): number {
   if (result.chargedCount > 0) {
     stats.ppeEventsCharged += result.chargedCount;
@@ -71,17 +74,9 @@ export function applyConfirmedCharges(stats: RunStats, result: ChargeResult): nu
 
 /**
  * Push one opportunity to the default Dataset.
- * In PPE mode the SDK tracks `apify-default-dataset-item` automatically — do not pass that name.
- * Apify JS SDK 3.7+ returns ChargeResult from the instance path even when the no-eventName
- * overload is typed as void.
+ * Call without an event name so Apify automatically bills `apify-default-dataset-item`.
+ * The public JS SDK contract for that call is `Promise<void>` — do not cast the return to ChargeResult.
  */
-export async function pushOpportunityResult<T extends Record<string, unknown>>(
-  item: T,
-): Promise<ChargeResult> {
-  // Runtime returns ChargeResult; the no-eventName static overload is typed as void.
-  const result = (await Actor.pushData(item)) as unknown as ChargeResult | undefined;
-  if (result && typeof result === 'object' && 'chargedCount' in result) {
-    return result;
-  }
-  return emptyChargeResult();
+export async function pushOpportunityResult<T extends Record<string, unknown>>(item: T): Promise<void> {
+  await Actor.pushData(item);
 }

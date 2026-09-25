@@ -21,6 +21,8 @@ export type RunStats = {
   aiResultsGenerated: number;
   aiReportsGenerated: number;
   ppeEventsCharged: number;
+  /** Opportunities successfully written to the default Dataset (not a ChargeResult confirmation). */
+  ppeDatasetItemsDelivered: number;
   submittedUrlsAttempted: number;
   customWebpagesAttempted: number;
   instagramUrlsAttempted: number;
@@ -54,6 +56,7 @@ export function createRunStats(): RunStats {
     aiResultsGenerated: 0,
     aiReportsGenerated: 0,
     ppeEventsCharged: 0,
+    ppeDatasetItemsDelivered: 0,
     submittedUrlsAttempted: 0,
     customWebpagesAttempted: 0,
     instagramUrlsAttempted: 0,
@@ -112,6 +115,7 @@ export function formatRunSummary(stats: RunStats): Record<string, string | numbe
     aiResultsGenerated: stats.aiResultsGenerated,
     aiReportsGenerated: stats.aiReportsGenerated,
     ppeEventsCharged: stats.ppeEventsCharged,
+    ppeDatasetItemsDelivered: stats.ppeDatasetItemsDelivered,
     submittedUrlsAttempted: stats.submittedUrlsAttempted,
     customWebpagesAttempted: stats.customWebpagesAttempted,
     instagramUrlsAttempted: stats.instagramUrlsAttempted,
