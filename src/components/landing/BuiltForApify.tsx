@@ -1,4 +1,6 @@
-import { CalendarClock, Database, Plug, Receipt, Settings2, Sheet } from 'lucide-react';
+import { CalendarClock, Code2, Database, Plug, Receipt, Settings2, Sheet } from 'lucide-react';
+import { Reveal } from '@/components/ui/Reveal';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 const features = [
   { label: 'Apify Actor runtime', icon: Settings2 },
@@ -6,36 +8,40 @@ const features = [
   { label: 'Dataset output', icon: Database },
   { label: 'JSON and CSV export', icon: Sheet },
   { label: 'Schedules', icon: CalendarClock },
-  { label: 'API integration', icon: Plug },
+  { label: 'API integration', icon: Code2 },
   { label: 'Pay-per-event pricing', icon: Receipt },
 ] as const;
 
 export function BuiltForApify() {
   return (
-    <section id="apify" className="section-space scroll-mt-24 bg-surface">
-      <div className="container-shell">
-        <div className="max-w-2xl">
-          <h2 className="text-3xl font-semibold tracking-tight text-text sm:text-4xl">
-            Built for Apify
-          </h2>
-          <p className="mt-4 text-base leading-7 text-muted">
-            Scouvela is designed as an Apify Actor: run it once, schedule it, or wire it into your
-            own automations. The public Store listing will be linked here when it is available.
-          </p>
-        </div>
-        <ul className="mt-8 flex flex-wrap gap-3">
-          {features.map((feature) => {
+    <section id="apify" className="section-space scroll-mt-16 border-t border-border bg-white">
+      <div className="container-shell grid items-start gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
+        <SectionHeading eyebrow="Platform" title="Built for Apify." accent="Plugs into everything.">
+          Run it once, schedule it, or wire it into your own automations. The public Store listing
+          will be linked here when it is available.
+        </SectionHeading>
+
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <li
-                key={feature.label}
-                className="inline-flex items-center gap-2 rounded-lg border border-border bg-background/70 px-3.5 py-2 text-sm font-medium text-text"
-              >
-                <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
-                {feature.label}
-              </li>
+              <Reveal as="li" key={feature.label} delay={index * 60}>
+                <div className="group flex h-full flex-col gap-4 rounded-2xl border border-border p-4 transition-all duration-300 hover:-translate-y-1 hover:border-teal/40 hover:bg-teal/[0.04]">
+                  <Icon
+                    className="h-5 w-5 text-teal-deep transition-transform duration-300 group-hover:scale-110"
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm font-semibold text-text">{feature.label}</span>
+                </div>
+              </Reveal>
             );
           })}
+          <Reveal as="li" delay={features.length * 60} className="sm:col-span-2">
+            <div className="flex h-full flex-col justify-between gap-4 rounded-2xl bg-sun p-4 text-ink">
+              <span className="text-xs font-bold uppercase tracking-wide">Status</span>
+              <span className="text-sm font-bold">Store listing coming soon</span>
+            </div>
+          </Reveal>
         </ul>
       </div>
     </section>

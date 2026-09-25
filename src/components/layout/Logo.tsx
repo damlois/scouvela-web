@@ -6,40 +6,41 @@ type LogoProps = {
   href?: string | null;
   className?: string;
   priority?: boolean;
-  variant?: 'wordmark' | 'mark';
+  tone?: 'dark' | 'light';
 };
 
-const wordmarkSize = { width: 168, height: 40 };
-const markSize = { width: 40, height: 40 };
-
-export function Logo({
-  href = '/',
-  className,
-  priority = false,
-  variant = 'wordmark',
-}: LogoProps) {
-  const isMark = variant === 'mark';
-  const image = (
-    <Image
-      src={isMark ? '/images/scouvela-mark.png' : '/images/scouvela-wordmark.png'}
-      alt="Scouvela"
-      width={isMark ? markSize.width : wordmarkSize.width}
-      height={isMark ? markSize.height : wordmarkSize.height}
-      className={cn(
-        isMark ? 'h-9 w-9 object-contain' : 'h-8 w-auto max-w-[11.5rem] sm:h-9 sm:max-w-[13.5rem]',
-        className,
-      )}
-      priority={priority}
-    />
+/** Mark + wordmark. `tone` is the surface it sits on. */
+export function Logo({ href = '/', className, priority = false, tone = 'dark' }: LogoProps) {
+  const content = (
+    <span className={cn('group flex items-center gap-2', className)}>
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white p-1.5 ring-1 ring-black/5 transition-transform duration-300 group-hover:rotate-[-8deg]">
+        <Image
+          src="/images/scouvela-mark.png"
+          alt=""
+          width={32}
+          height={32}
+          priority={priority}
+          className="h-full w-full object-contain"
+        />
+      </span>
+      <span
+        className={cn(
+          'font-display text-xl font-extrabold tracking-tight',
+          tone === 'dark' ? 'text-white' : 'text-text',
+        )}
+      >
+        Scouvela
+      </span>
+    </span>
   );
 
   if (!href) {
-    return image;
+    return content;
   }
 
   return (
-    <Link href={href} className="rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-      {image}
+    <Link href={href} aria-label="Scouvela home" className="rounded-md">
+      {content}
     </Link>
   );
 }

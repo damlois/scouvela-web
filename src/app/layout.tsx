@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Metadata } from 'next';
-import { Manrope } from 'next/font/google';
+import { Bricolage_Grotesque, JetBrains_Mono, Manrope } from 'next/font/google';
 import { Footer } from '@/components/layout/Footer';
 import { Header } from '@/components/layout/Header';
 import './globals.css';
@@ -8,7 +8,19 @@ import './globals.css';
 const manrope = Manrope({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-manrope',
+  variable: '--font-sans',
+});
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-display',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-mono',
 });
 
 const siteTitle = 'Scouvela — African SME Opportunity Intelligence';
@@ -49,10 +61,19 @@ export const metadata: Metadata = {
   },
 };
 
+const fontVariables = [manrope, bricolage, jetbrainsMono]
+  .map((font) => font.variable)
+  .join(' ');
+
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en">
-      <body className={`${manrope.variable} flex min-h-screen flex-col font-sans antialiased`}>
+    <html lang="en" className={fontVariables}>
+      <head>
+        <noscript>
+          <style>{'.reveal{opacity:1!important;transform:none!important}'}</style>
+        </noscript>
+      </head>
+      <body className="flex min-h-screen flex-col bg-white font-sans antialiased">
         <Header />
         {children}
         <Footer />
