@@ -4,40 +4,29 @@
 
 - What changed and why?
 
-### Workspace
-
-- [ ] `apps/web` (frontend)
-- [ ] `apps/actor` (Apify Actor)
-- [ ] `packages/shared` (schemas and types)
-
 ### Type of change
 
 - [ ] Feature
 - [ ] Bug fix
-- [ ] Data or Actor change
-- [ ] UI only
+- [ ] UI / landing page
 - [ ] Documentation
 - [ ] Chore / tooling
 
 ### Checklist
 
-- [ ] I used the shared Zod schemas instead of duplicating types
-- [ ] I did not expose `APIFY_TOKEN` or other secrets to the client
-- [ ] Every result still includes the original `sourceUrl`
-- [ ] I did not invent scraped records or unverified “verified” labels
-- [ ] Mock mode still works for frontend development (`USE_MOCK_DATA=true`)
-- [ ] `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass
-- [ ] I tested the affected route or Actor path locally
+- [ ] No search, vendor, funding, or Actor runtime code was reintroduced
+- [ ] “Run on Apify” stays safe when `NEXT_PUBLIC_APIFY_ACTOR_URL` is unset
+- [ ] Logo assets are unchanged
+- [ ] `pnpm lint`, `pnpm typecheck`, and `pnpm build` pass
+- [ ] Mobile layout checked at ~320px width
 
 ### How to test
 
 1.
 2.
 
-### Screenshots / sample output
+### Screenshots
 
-If this changes UI or Actor output, attach a screenshot or a short sample JSON payload.
+If this changes the landing page, attach a desktop and mobile screenshot.
 
 ### Notes for reviewers
-
-Target branch should be `develop`, unless this is a documented hotfix for `main`.

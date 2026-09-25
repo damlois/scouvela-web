@@ -1,252 +1,79 @@
-# Scouvela
+# Scouvela Web
 
-Scouvela is an Apify-powered discovery platform for people in Nigeria. It helps users:
+Optional marketing and demonstration landing page for the **Scouvela** Apify Actor.
 
-1. Find current SME funding opportunities, including loans, grants, accelerators and support programmes — aimed at business owners.
-2. Find local service providers such as tailors, bakers, shoemakers, printers and packaging vendors by location — for personal use or for a business.
+Scouvela is an Apify Actor that discovers public grants, tenders, accelerators, training programmes and SME empowerment opportunities across official websites and supported public social pages. It converts fragmented announcements into structured, source-linked data and can optionally use AI to classify and match opportunities.
 
-This repository is a pnpm monorepo. The web app, Apify Actor and shared contracts live in one Git repository so developers can work in parallel without duplicating types.
-
-## Architecture overview
-
-- `apps/web` is a Next.js App Router application. It owns the UI and a server-only `POST /api/search` route.
-- `apps/actor` is a TypeScript Apify Actor. It will collect publicly listed records, normalise them, deduplicate them and push valid items to an Apify Dataset.
-- `packages/shared` is the contract layer. Zod schemas and inferred TypeScript types are defined once and imported by both apps.
-
-The current demo UI searches local mock data in the browser. It does not call Apify and does not call `POST /api/search`. That API route remains in place for later Actor integration and still keeps `APIFY_TOKEN` on the server.
+This repository is **not** the Actor. The Actor lives here:
 
 ```text
-Browser UI  →  local mock data  →  typed result cards
-POST /api/search remains available for a later Apify-backed search.
-```
-
-## Repository structure
-
-```text
-scouvela/
-├── apps/
-│   ├── web/                 # Next.js UI and search API
-│   └── actor/               # Apify Actor, crawlers and transformers
-├── packages/
-│   └── shared/              # Zod schemas and shared types
-├── .github/
-│   └── pull_request_template.md
-├── .env.example
-├── package.json
-├── pnpm-workspace.yaml
-├── README.md
-└── tsconfig.base.json
+https://github.com/damlois/Scouvela
 ```
 
 ## Prerequisites
 
 - Node.js 20 or newer
-- [pnpm](https://pnpm.io/) 9, via Corepack: `corepack enable && corepack prepare pnpm@9.15.9 --activate`
-- An Apify account only when you are ready to run or deploy the Actor
-- A Vercel account only when you are ready to deploy the web app
+- [pnpm](https://pnpm.io/) 9 via Corepack:
 
-## Installation
+```bash
+corepack enable && corepack prepare pnpm@9.15.9 --activate
+```
 
-From the repository root:
+## Local setup
 
 ```bash
 pnpm install
-pnpm --filter @scouvela/shared build
-```
-
-The shared package compiles to `packages/shared/dist`. Rebuild it after changing schemas.
-
-## Environment-variable setup
-
-Copy the example file into the Next.js app. Do not commit real credentials.
-
-```bash
-cp .env.example apps/web/.env.local
+cp .env.example .env.local
+pnpm dev
 ```
 
 On Windows PowerShell:
 
 ```powershell
-Copy-Item .env.example apps/web/.env.local
+pnpm install
+Copy-Item .env.example .env.local
+pnpm dev
 ```
 
-Placeholders:
+Open [http://localhost:3000](http://localhost:3000).
+
+## Environment variable
 
 ```env
-APIFY_TOKEN=
-APIFY_ACTOR_ID=
-USE_MOCK_DATA=true
-ACTOR_RUN_TIMEOUT_SECONDS=60
+NEXT_PUBLIC_APIFY_ACTOR_URL=https://apify.com/your-username/scouvela-african-sme-opportunities
 ```
 
-Rules:
+Replace the placeholder with the public Actor Store URL when it is available. If the variable is missing or still contains `your-username`, “Run on Apify” buttons stay visible but disabled.
 
-- `APIFY_TOKEN` is server-only. Never prefix it with `NEXT_PUBLIC_`.
-- `USE_MOCK_DATA=true` returns sample funding and vendor records without calling Apify.
-- `USE_MOCK_DATA=false` requires both `APIFY_TOKEN` and `APIFY_ACTOR_ID`.
-- `ACTOR_RUN_TIMEOUT_SECONDS` defaults to 60 and is capped at 300.
-
-## Local development commands
+## Scripts
 
 ```bash
-pnpm install
-pnpm dev          # shared build, then Next.js at http://localhost:3000
-pnpm dev:web      # frontend only
-pnpm dev:actor    # Actor entrypoint (needs Apify local storage / `apify run`)
-pnpm build
-pnpm lint
-pnpm typecheck
-pnpm test
+pnpm dev        # local development server
+pnpm build      # production build
+pnpm start      # serve the production build
+pnpm lint       # ESLint
+pnpm typecheck  # TypeScript --noEmit
 ```
 
-Useful pages:
+## Deploy to Vercel
 
-- `/` landing page
-- `/funding` funding search
-- `/vendors` vendor search
-- `/funding?state=error` and `/vendors?state=error` preview the error state in development
+1. Import this repository in Vercel.
+2. Keep the root directory as the repository root.
+3. Install command: `pnpm install`
+4. Build command: `pnpm build`
+5. Set `NEXT_PUBLIC_APIFY_ACTOR_URL` in the project environment variables when the Actor is published.
 
 ## Brand assets
 
-The Scouvela lockup and favicon are the official logo (teal S with amber dot, plus the wordmark):
-
 ```text
-apps/web/public/images/scouvela-wordmark.png
-apps/web/public/images/scouvela-mark.png
-apps/web/public/favicon.ico
-apps/web/src/app/icon.png
-apps/web/src/app/apple-icon.png
+public/images/scouvela-wordmark.png
+public/images/scouvela-mark.png
+public/favicon.ico
+src/app/icon.png
+src/app/apple-icon.png
 ```
 
-The navbar and footer use the complete wordmark image. The S mark is used for the favicon.
+## Related
 
-## How mock mode works
-
-The funding and vendor pages filter `apps/web/src/lib/mock-data.ts` in the browser. There is a short loading delay so skeleton states can be demonstrated. No network request is made for search.
-
-`POST /api/search` can still return the same mock records when `USE_MOCK_DATA=true`. That path is for later Apify integration and is not used by the current UI.
-
-Demo records are fictional, labelled with `sourceName: "Scouvela demo dataset"`, and use `https://example.com/...` placeholder URLs. They are not scraped results.
-
-## How to run the Actor locally
-
-Install the [Apify CLI](https://docs.apify.com/cli) if you do not already have it:
-
-```bash
-npm install -g apify-cli
-```
-
-From `apps/actor`:
-
-```bash
-cd apps/actor
-pnpm --filter @scouvela/shared build
-apify run
-```
-
-`apps/actor/INPUT.json` is a safe sample input:
-
-```json
-{
-  "mode": "funding",
-  "query": "SME",
-  "maxResults": 5
-}
-```
-
-The Actor crawls approved public sources only after you review `apps/actor/SOURCES.md` and set the source-approval environment variables. Cheerio is the default crawler. Playwright remains an unused fallback.
-
-You can also start the compiled TypeScript entrypoint after building shared:
-
-```bash
-pnpm dev:actor
-```
-
-That command expects Apify local storage. Prefer `apify run` during Actor development.
-
-## How to deploy the web app to Vercel
-
-1. Push the repository to GitHub.
-2. Import the project in Vercel.
-3. Set the Root Directory to the repository root, or configure Vercel to build the `apps/web` workspace.
-4. Use these build settings if you configure them manually:
-   - Install command: `pnpm install`
-   - Build command: `pnpm --filter @scouvela/shared build && pnpm --filter @scouvela/web build`
-   - Output: Next.js default for `apps/web`
-5. Add server environment variables in the Vercel project settings:
-   - `USE_MOCK_DATA`
-   - `APIFY_TOKEN` (never expose this to the browser)
-   - `APIFY_ACTOR_ID`
-   - `ACTOR_RUN_TIMEOUT_SECONDS`
-6. Keep `USE_MOCK_DATA=true` until the Actor is ready, then switch it to `false` for a live demo.
-
-If Vercel asks for a project directory, `apps/web` is the Next.js app. It still needs the workspace root so it can resolve `@scouvela/shared`.
-
-## How to deploy the Actor to Apify
-
-1. Create an Actor in the Apify Console named `scouvela-discovery`, or let the CLI create it.
-2. From `apps/actor`, log in and push:
-
-```bash
-cd apps/actor
-apify login
-apify push
-```
-
-The Actor Dockerfile uses the repository root as `dockerContextDir`, so it can install `packages/shared` and `apps/actor` together.
-
-3. Copy the deployed Actor ID into `APIFY_ACTOR_ID`.
-4. Store `APIFY_TOKEN` only in server or Apify secret settings.
-
-Do not scrape a source until it is publicly available and approved. Keep crawler logic and transformers separate.
-
-## Team responsibilities
-
-- **Developer**: Apify Actor, scraping, data processing, API integration and deployment.
-- **Developer**: frontend UI, responsiveness and user experience.
-
-Shared work:
-
-- Changes to `packages/shared` should be reviewed by both people.
-- Do not duplicate Zod schemas or result types in the frontend or Actor.
-
-## Git workflow
-
-Do not create remote branches until the team is ready. Use this branch layout:
-
-| Branch        | Purpose                      |
-| ------------- | ---------------------------- |
-| `main`        | Stable, demo-ready code      |
-| `develop`     | Shared integration branch    |
-| `frontend-ui` | Developer’s frontend branch  |
-| `apify-actor` | Developer’s Actor and data branch |
-
-Commands the team should run when you are ready to create local branches:
-
-```bash
-git checkout -b main
-git checkout -b develop
-git checkout -b frontend-ui
-git checkout -b apify-actor
-```
-
-Suggested daily flow:
-
-1. Start work from the latest `develop`.
-2. A developer commits UI work on `frontend-ui`.
-3. A developer commits Actor and API work on `apify-actor`.
-4. Open pull requests into `develop`.
-5. Promote `develop` to `main` only when the demo path is stable.
-
-Pull requests should use `.github/pull_request_template.md`.
-
-## Current MVP limitations
-
-- The UI is a hackathon-ready frontend backed by fictional demo data, not live scraped records.
-- Actor live crawls stay off until you review `apps/actor/SOURCES.md` and set the source-approval variables. Fixture tests cover parsing without hitting live sites.
-- Playwright is optional and unused until a JavaScript-rendered source is approved.
-- There is no authentication, payments, database or user accounts.
-- Vendor records are `source-listed` or `unverified` only. Scouvela does not claim that a vendor is verified.
-- Mock data is for frontend development. It is not a substitute for collected public records.
-- Result counts on the web search API are capped at 50. The Actor defaults to 5 results and caps at 20.
-- The platform only processes publicly available business information and always preserves the original `sourceUrl`.
+- Actor repository: [damlois/Scouvela](https://github.com/damlois/Scouvela)
+- Landing page repository: [damlois/scouvela-web](https://github.com/damlois/scouvela-web)

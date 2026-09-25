@@ -1,0 +1,199 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #0b6b57;
+  --primary-dark: #075346;
+  --accent: #f5a623;
+  --text: #17211e;
+  --muted-text: #60706a;
+  --background: #f5f5f3;
+  --surface: #ffffff;
+  --border: #e5e5e1;
+  --error: #b42318;
+  --success: #067647;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  color: var(--text);
+  background: var(--surface);
+  overflow-x: hidden;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes hero-float-alt {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+@keyframes hero-radar {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(0.96);
+    opacity: 0.55;
+  }
+}
+
+@keyframes hero-pulse {
+  0%,
+  100% {
+    box-shadow: 0 12px 40px rgba(23, 33, 30, 0.12), 0 0 0 0 rgba(245, 166, 35, 0.28);
+  }
+  50% {
+    box-shadow: 0 12px 40px rgba(23, 33, 30, 0.12), 0 0 0 12px rgba(245, 166, 35, 0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.15s ease-out;
+}
+
+.hero-radar {
+  animation: hero-radar 8s ease-in-out infinite;
+}
+
+.hero-radar-delayed {
+  animation-delay: 1.5s;
+}
+
+.hero-pulse {
+  animation: hero-pulse 4.5s ease-out infinite;
+}
+
+.hero-float-a,
+.hero-float-c,
+.hero-float-e,
+.hero-float-g {
+  animation: hero-float 7s ease-in-out infinite;
+}
+
+.hero-float-b,
+.hero-float-d,
+.hero-float-f,
+.hero-float-h {
+  animation: hero-float-alt 8s ease-in-out infinite;
+}
+
+.hero-float-b {
+  animation-delay: 0.6s;
+}
+
+.hero-float-c {
+  animation-delay: 1.1s;
+}
+
+.hero-float-d {
+  animation-delay: 1.7s;
+}
+
+.hero-float-e {
+  animation-delay: 0.3s;
+}
+
+.hero-float-f {
+  animation-delay: 1.4s;
+}
+
+.hero-float-g {
+  animation-delay: 0.9s;
+}
+
+.hero-float-h {
+  animation-delay: 2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .hero-radar,
+  .hero-pulse,
+  .hero-float-a,
+  .hero-float-b,
+  .hero-float-c,
+  .hero-float-d,
+  .hero-float-e,
+  .hero-float-f,
+  .hero-float-g,
+  .hero-float-h {
+    animation: none !important;
+  }
+}
+
+@layer components {
+  .container-shell {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+
+  .section-space {
+    @apply py-14 sm:py-20;
+  }
+
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-white shadow-sm hover:bg-primary-dark hover:shadow;
+  }
+
+  .btn-secondary {
+    @apply btn border border-border bg-surface text-text hover:border-primary hover:text-primary;
+  }
+
+  .btn-ghost {
+    @apply btn text-primary hover:bg-background;
+  }
+}

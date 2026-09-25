@@ -3,6 +3,4 @@ dist
 .next
 coverage
 pnpm-lock.yaml
-storage
-apify_storage
 .vercel
