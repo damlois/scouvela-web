@@ -1,7 +1,12 @@
 import { log } from 'apify';
 import { z } from 'zod';
 import { opportunityTypeSchema, type ParsedActorInput } from '@scouvela/shared';
-import { chargeEvent, PPE_AI_ENRICHED_RESULT } from '../billing/events.js';
+import {
+  applyConfirmedCharges,
+  chargeEvent,
+  isPayPerEventRun,
+  PPE_AI_ENRICHED_RESULT,
+} from '../billing/events.js';
 import type { OpportunityCandidate } from '../discovery/opportunity-detector.js';
 import { assessOpportunityText } from '../discovery/opportunity-detector.js';
 import type { RawOpportunity } from '../sources/types.js';
@@ -48,9 +53,11 @@ export async function classifyRejectedPost(
       return null;
     }
 
-    if (await chargeEvent(PPE_AI_ENRICHED_RESULT)) {
-      stats.ppeEventsCharged += 1;
+    const chargeResult = await chargeEvent(PPE_AI_ENRICHED_RESULT);
+    if (applyConfirmedCharges(stats, chargeResult) > 0) {
       stats.aiResultsGenerated += 1;
+    } else if (isPayPerEventRun()) {
+      return null;
     }
 
     return {

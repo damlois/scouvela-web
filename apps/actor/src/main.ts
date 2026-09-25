@@ -1,6 +1,7 @@
 import { Actor, log } from 'apify';
 import { actorInputSchema } from '@scouvela/shared';
 import { applyAiSearchPlan, enrichOpportunities, writeOpportunityReport } from './ai/agent.js';
+import { deliverOpportunities } from './billing/deliver.js';
 import { crawlSelectedSources } from './crawlers/opportunity-crawler.js';
 import { discoverFromInput } from './discovery/run-discovery.js';
 import { planSearchFromQuery } from './input/planner.js';
@@ -55,13 +56,8 @@ try {
   }
   rawRecords.push(...(await discoverFromInput(input, stats)));
   const validated = finaliseOpportunities(rawRecords, input, scrapedAt, stats);
-  const output = await enrichOpportunities(validated, input, stats);
-
-  for (const item of output) {
-    await Actor.pushData(item);
-  }
-
-  stats.recordsSaved = output.length;
+  const enriched = await enrichOpportunities(validated, input, stats);
+  const output = await deliverOpportunities(enriched, stats);
   await writeOpportunityReport(output, input, stats);
   await Actor.setValue('RUN_SUMMARY', buildRunSummary(stats));
 

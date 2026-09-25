@@ -120,10 +120,10 @@ Store users should see three events. Configure them in Console: Actor → **Publ
 
 | Event name | Title | Charged by | Suggested price |
 | --- | --- | --- | --- |
-| `apify-default-dataset-item` | Dataset item | Platform, each saved opportunity | $0.005 |
-| `ai-search-plan` | AI search plan | Code, only when a plan validates | $0.010 |
-| `ai-enriched-result` | AI enriched result | Code, only when a summary validates | $0.010 |
-| `ai-opportunity-report` | AI opportunity brief | Code, only when the brief is saved | $0.050 |
+| `apify-default-dataset-item` | Dataset item | Platform, each saved opportunity | $0.01 |
+| `ai-search-plan` | AI search plan | Code, only when a plan validates | $0.01 |
+| `ai-enriched-result` | AI enriched result | Code, only when a summary validates | $0.02 |
+| `ai-opportunity-report` | AI opportunity brief | Code, only when the brief is saved | $0.05 |
 
 Include platform usage in the event prices so users are not surprised by a second compute bill. Set **Primary event** to `apify-default-dataset-item`.
 

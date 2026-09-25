@@ -8,10 +8,14 @@ import {
   type SmeOpportunity,
 } from '@scouvela/shared';
 import {
+  applyConfirmedCharges,
   chargeEvent,
+  isPayPerEventRun,
   PPE_AI_ENRICHED_RESULT,
   PPE_AI_OPPORTUNITY_REPORT,
   PPE_AI_SEARCH_PLAN,
+  PPE_DEFAULT_DATASET_ITEM,
+  remainingEventCharges,
 } from '../billing/events.js';
 import type { RunStats } from '../utils/stats.js';
 import { completeJson, parseJsonContent } from './client.js';
@@ -65,9 +69,12 @@ export async function applyAiSearchPlan(
     return input;
   }
 
-  if (await chargeEvent(PPE_AI_SEARCH_PLAN)) {
+  const chargeResult = await chargeEvent(PPE_AI_SEARCH_PLAN);
+  if (applyConfirmedCharges(stats, chargeResult) > 0) {
     stats.aiPlansGenerated += 1;
-    stats.ppeEventsCharged += 1;
+  } else if (isPayPerEventRun() && chargeResult.chargedCount === 0) {
+    log.warning('AI search plan generated but not charged; continuing with structured input.');
+    return input;
   }
 
   return {
@@ -85,6 +92,49 @@ export async function applyAiSearchPlan(
   };
 }
 
+async function enrichOneOpportunity(
+  record: SmeOpportunity,
+  input: ParsedActorInput,
+  apiKey: string,
+  stats: RunStats,
+): Promise<SmeOpportunity> {
+  try {
+    if (isPayPerEventRun() && remainingEventCharges(PPE_AI_ENRICHED_RESULT) <= 0) {
+      return record;
+    }
+
+    const content = await completeJson({
+      apiKey,
+      model: input.ai.model,
+      prompt: enrichmentPrompt(record, input),
+    });
+    const parsed = content ? parseJsonContent(content, enrichmentSchema) : undefined;
+    if (!parsed) {
+      return record;
+    }
+
+    const chargeResult = await chargeEvent(PPE_AI_ENRICHED_RESULT);
+    if (applyConfirmedCharges(stats, chargeResult) > 0) {
+      stats.aiResultsGenerated += 1;
+    } else if (isPayPerEventRun()) {
+      return record;
+    }
+
+    const ai: OpportunityAi = {
+      ...parsed,
+      generatedAt: new Date().toISOString(),
+      model: input.ai.model,
+    };
+    return { ...record, ai };
+  } catch (error) {
+    log.warning('AI enrichment failed for one record', {
+      id: record.id,
+      message: error instanceof Error ? error.message : 'Unknown enrichment error',
+    });
+    return record;
+  }
+}
+
 export async function enrichOpportunities(
   records: SmeOpportunity[],
   input: ParsedActorInput,
@@ -96,38 +146,11 @@ export async function enrichOpportunities(
   }
 
   const enriched: SmeOpportunity[] = [];
-
   for (const record of records) {
-    try {
-      const content = await completeJson({
-        apiKey,
-        model: input.ai.model,
-        prompt: enrichmentPrompt(record, input),
-      });
-      const parsed = content ? parseJsonContent(content, enrichmentSchema) : undefined;
-      if (!parsed) {
-        enriched.push(record);
-        continue;
-      }
-
-      const ai: OpportunityAi = {
-        ...parsed,
-        generatedAt: new Date().toISOString(),
-        model: input.ai.model,
-      };
-      enriched.push({ ...record, ai });
-
-      if (await chargeEvent(PPE_AI_ENRICHED_RESULT)) {
-        stats.aiResultsGenerated += 1;
-        stats.ppeEventsCharged += 1;
-      }
-    } catch (error) {
-      log.warning('AI enrichment failed for one record', {
-        id: record.id,
-        message: error instanceof Error ? error.message : 'Unknown enrichment error',
-      });
-      enriched.push(record);
+    if (isPayPerEventRun() && remainingEventCharges(PPE_DEFAULT_DATASET_ITEM) <= 0) {
+      break;
     }
+    enriched.push(await enrichOneOpportunity(record, input, apiKey, stats));
   }
 
   return enriched;
@@ -143,6 +166,11 @@ export async function writeOpportunityReport(
     return;
   }
 
+  if (isPayPerEventRun() && remainingEventCharges(PPE_AI_OPPORTUNITY_REPORT) <= 0) {
+    log.warning('Skipping AI opportunity report — charge limit reached for ai-opportunity-report.');
+    return;
+  }
+
   const content = await completeJson({
     apiKey,
     model: input.ai.model,
@@ -154,15 +182,23 @@ export async function writeOpportunityReport(
     return;
   }
 
-  await Actor.setValue('OPPORTUNITY_REPORT', {
+  const payload = {
     ...report,
     generatedAt: new Date().toISOString(),
     model: input.ai.model,
     resultCount: records.length,
-  });
+  };
 
-  if (await chargeEvent(PPE_AI_OPPORTUNITY_REPORT)) {
+  await Actor.setValue('OPPORTUNITY_REPORT', payload);
+
+  const chargeResult = await chargeEvent(PPE_AI_OPPORTUNITY_REPORT);
+  if (applyConfirmedCharges(stats, chargeResult) > 0) {
     stats.aiReportsGenerated += 1;
-    stats.ppeEventsCharged += 1;
+    return;
+  }
+
+  if (isPayPerEventRun()) {
+    await Actor.setValue('OPPORTUNITY_REPORT', null);
+    log.warning('AI opportunity report was generated but not charged; report was removed.');
   }
 }
