@@ -1,0 +1,19 @@
+{
+  "actorOutputSchemaVersion": 1,
+  "title": "Scouvela output",
+  "description": "Structured African SME opportunities and a summary of the completed Actor run.",
+  "properties": {
+    "opportunities": {
+      "type": "string",
+      "title": "Opportunity results",
+      "description": "Valid, normalized and source-linked SME opportunities saved to the default Dataset.",
+      "template": "{{links.apiDefaultDatasetUrl}}/items"
+    },
+    "runSummary": {
+      "type": "string",
+      "title": "Run summary",
+      "description": "Processing statistics, completed sources, filtered records and source failures for this run.",
+      "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/RUN_SUMMARY"
+    }
+  }
+}
