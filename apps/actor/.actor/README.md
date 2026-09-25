@@ -2,9 +2,12 @@
 
 **One Actor. Thousands of opportunities for African businesses.**
 
+[Visit the Scouvela website →](https://scouvela-web.vercel.app/)
+
 Scouvela discovers grants, loans, accelerators, training programmes, competitions and other growth opportunities for African SMEs from public sources. It normalises fragmented pages, removes duplicates, and returns structured, source-linked records you can export as JSON, CSV or Excel — or consume through the Apify API, a webhook, a schedule, or an AI agent.
 
 Standard extraction needs **no external API key**. Optional AI matching uses **your own OpenAI key**, so you stay in control of LLM cost.
+
 
 ## The problem
 
@@ -124,12 +127,6 @@ You are not charged a successful-result event for duplicate, rejected or invalid
 - TEFConnect and other application portals are not crawled — only public programme pages.
 - Missing facts stay missing.
 - Always confirm terms on the original `sourceUrl`.
-
-## Explore Scouvela
-
-Learn how Scouvela discovers and structures African SME grants, funding, training, accelerator, and contract opportunities.
-
-[Visit the Scouvela website →](https://scouvela-web.vercel.app/)
 
 ## About Scouvela
 
